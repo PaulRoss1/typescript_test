@@ -6,9 +6,13 @@ import Search from "./components/Search";
 import ShowInfo from "./components/ShowInfo";
 import Graph from "./components/Graph";
 
+import { ShowData, ShowDataError } from "./api/interfaces";
+
 export default function App() {
-  const [theme, setTheme] = useState("dark");
-  const [showData, setShowData] = useState({});
+  const [theme, setTheme] = useState<string>("dark");
+  const [showData, setShowData] = useState<ShowData | ShowDataError | null>(
+    null
+  );
   const [searchedShow, setSearchedShow] = useState([]);
 
   const searchProps = {
@@ -29,7 +33,9 @@ export default function App() {
   return (
     <div className="App" id={theme}>
       <Search {...searchProps} />
+
       <ShowInfo {...showInfoProps} />
+
       <Graph {...graphProps} />
     </div>
   );

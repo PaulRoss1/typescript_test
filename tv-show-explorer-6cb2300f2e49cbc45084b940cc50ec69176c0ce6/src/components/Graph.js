@@ -78,7 +78,7 @@ export default function Graph(props) {
   useEffect(() => {
     const getRatingsData = async (showData) => {
       let ratingsData = [];
-      for (let i = 1; i <= showData.totalSeasons; i++) {
+      for (let i = 1; i <= showData?.totalSeasons; i++) {
         const seasonData = await fetchSeasonData(showData.Title, i);
 
         for (let j = 0; j < seasonData["Episodes"].length; j++) {

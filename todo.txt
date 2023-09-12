@@ -1,0 +1,9 @@
+https://www.youtube.com/watch?v=TPACABQTHvM
+    finished at 19:40
+
+
+i've played around with tester.tsx,
+i've rewritten showInfo.tsx
+
+now i want to rewrite Search.js to typescript
+
