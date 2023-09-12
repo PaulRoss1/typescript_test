@@ -9,11 +9,11 @@ import Graph from "./components/Graph";
 import { ShowData, ShowDataError } from "./api/interfaces";
 
 export default function App() {
-  const [theme, setTheme] = useState<string>("dark");
+  const [theme, setTheme] = useState("dark");
   const [showData, setShowData] = useState<ShowData | ShowDataError | null>(
     null
   );
-  const [searchedShow, setSearchedShow] = useState([]);
+  const [searchedShow, setSearchedShow] = useState("");
 
   const searchProps = {
     setTheme,

@@ -5,12 +5,15 @@ import axios from "axios";
 const OMDB_API_URL = "http://www.omdbapi.com/";
 const OMDB_API_KEY = "8ea4c4c5";
 
-export default function Search(props) {
+export interface SearchProps {
+  setTheme: React.Dispatch<React.SetStateAction<string>>;
+  setSearchedShow: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export default function Search({ setTheme, setSearchedShow }: SearchProps) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const suggestionsRef = useRef(null);
-
-  const { setTheme, setSearchedShow } = props;
+  const suggestionsRef = useRef<HTMLInputElement | null>(null);
 
   const toggleTheme = () => {
     setTheme((current) => (current === "light" ? "dark" : "light"));
@@ -32,7 +35,8 @@ export default function Search(props) {
         if (data.Search) {
           setSuggestions(
             data.Search.map(
-              (item) => `${item.Title} (${item.Year.split("–")[0]})`
+              (item: { Title: string; Year: string }) =>
+                `${item.Title} (${item.Year.split("–")[0]})`
             )
           );
         }
@@ -44,19 +48,19 @@ export default function Search(props) {
     fetchSuggestions();
   }, [query]);
 
-  const handleSuggestionClick = (item) => {
+  const handleSuggestionClick = (item: string) => {
     setSuggestions([]);
     setSearchedShow(item.split("(")[0]);
   };
 
-  const handleKeyPress = (event) => {
+  const handleKeyPress = (event: { key: string }) => {
     if (event.key === "Enter") {
       setSuggestions([]);
       setSearchedShow(query);
     }
   };
 
-  const handleClickOutside = (event) => {
+  const handleClickOutside = (event: { target: any }) => {
     if (
       suggestionsRef.current &&
       !suggestionsRef.current.contains(event.target)
