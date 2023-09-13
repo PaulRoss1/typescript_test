@@ -92,20 +92,20 @@ export default function Graph({
       for (let i = 1; i <= Number(showData?.totalSeasons); i++) {
         const seasonData = await fetchSeasonData(showData.Title, i);
 
-        for (let j = 0; j < seasonData["Episodes"].length; j++) {
-          const rating = seasonData["Episodes"][j]["imdbRating"];
+        for (let j = 0; j < seasonData.Episodes.length; j++) {
+          const rating = seasonData.Episodes[j].imdbRating;
           if (rating === "N/A") {
             try {
               const avgRating =
-                (parseFloat(seasonData["Episodes"][j - 1]["imdbRating"]) +
-                  parseFloat(seasonData["Episodes"][j + 1]["imdbRating"])) /
+                (parseFloat(seasonData.Episodes[j - 1].imdbRating) +
+                  parseFloat(seasonData.Episodes[j + 1].imdbRating)) /
                 2;
 
               ratingsData.push({
-                title: seasonData["Episodes"][j]["Title"],
-                released: seasonData["Episodes"][j]["Released"],
+                title: seasonData.Episodes[j].Title,
+                released: seasonData.Episodes[j].Released,
                 imdbRating: avgRating,
-                id: seasonData["Episodes"][j]["imdbID"],
+                id: seasonData.Episodes[j].imdbID,
                 season: i,
                 episode: j,
               });
@@ -114,10 +114,10 @@ export default function Graph({
             }
           } else {
             ratingsData.push({
-              title: seasonData["Episodes"][j]["Title"],
-              released: seasonData["Episodes"][j]["Released"],
+              title: seasonData.Episodes[j].Title,
+              released: seasonData.Episodes[j].Released,
               imdbRating: rating,
-              id: seasonData["Episodes"][j]["imdbID"],
+              id: seasonData.Episodes[j].imdbID,
               season: i,
               episode: j,
             });
