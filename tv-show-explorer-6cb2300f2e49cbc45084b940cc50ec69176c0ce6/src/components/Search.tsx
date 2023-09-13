@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import ReactSwitch from "react-switch";
 import axios from "axios";
 
-const OMDB_API_URL = "http://www.omdbapi.com/";
+const OMDB_API_URL = "https://www.omdbapi.com/";
 const OMDB_API_KEY = "8ea4c4c5";
 
 export interface SearchProps {

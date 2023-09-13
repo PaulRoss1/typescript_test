@@ -4,7 +4,7 @@ import Chart, { ChartType, ChartTypeRegistry } from "chart.js/auto";
 import ReactSwitch from "react-switch";
 import { ShowData, ShowDataError, Episode, ExtraInfo } from "../api/interfaces";
 
-const OMDB_API_URL = "http://www.omdbapi.com/";
+const OMDB_API_URL = "https://www.omdbapi.com/";
 const OMDB_API_KEY = "8ea4c4c5";
 
 export interface GraphProps {
