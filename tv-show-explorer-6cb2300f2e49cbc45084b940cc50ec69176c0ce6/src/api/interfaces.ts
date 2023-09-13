@@ -27,3 +27,19 @@ export interface ShowDataError {
   Response: string;
   Error: string;
 }
+
+export interface Episode {
+  title: string;
+  released: string;
+  imdbRating: string;
+  id: string;
+  season: number;
+  episode: number;
+}
+
+export interface ExtraInfo {
+  image: string;
+  runtime: string;
+  released: string;
+  plot: string;
+}

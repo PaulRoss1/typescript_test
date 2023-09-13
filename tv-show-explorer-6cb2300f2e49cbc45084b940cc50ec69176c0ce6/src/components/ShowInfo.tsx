@@ -30,31 +30,3 @@ export default function ShowInfo({ showData }: ShowInfoProps) {
     );
   }
 }
-
-// import { ShowData, ShowDataError } from "../api/interfaces";
-
-// export interface ShowInfoProps {
-//   showData: ShowData | ShowDataError | null;
-// }
-
-// export default function ShowInfo({ showData }: ShowInfoProps) {
-//   return (
-//     <div className="info">
-//       {showData && !(showData.Error == "Series not found!") && (
-//         <span className="info__data">
-//           {`${showData.Title} `}
-//           <span className="info__year">{`(${showData.Year})`}</span>
-//           &nbsp;&nbsp;&nbsp;
-//           {`·`}
-//           &nbsp;&nbsp;&nbsp;
-//           {`${showData.imdbRating} `}
-//           <span className="info__star">★</span>
-//           &nbsp;&nbsp;&nbsp;
-//           {`·`}
-//           &nbsp;&nbsp;&nbsp;
-//           {`Seasons: ${showData.totalSeasons}`}
-//         </span>
-//       )}
-//     </div>
-//   );
-// }

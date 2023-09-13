@@ -1,28 +1,39 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Chart from "chart.js/auto";
+import Chart, { ChartType, ChartTypeRegistry } from "chart.js/auto";
 import ReactSwitch from "react-switch";
+import { ShowData, ShowDataError, Episode, ExtraInfo } from "../api/interfaces";
 
 const OMDB_API_URL = "http://www.omdbapi.com/";
 const OMDB_API_KEY = "8ea4c4c5";
 
-export default function Graph(props) {
+export interface GraphProps {
+  searchedShow: string;
+  showData: ShowData | ShowDataError | null;
+  setShowData: React.Dispatch<
+    React.SetStateAction<ShowData | ShowDataError | null>
+  >;
+}
+
+export default function Graph({
+  searchedShow,
+  showData,
+  setShowData,
+}: GraphProps) {
   const [errorInfo, setErrorInfo] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [chart, setChart] = useState(null);
-  const [episode, setEpisode] = useState({});
-  const [chartType, setChartType] = useState("line");
-  const [extraInfo, setExtraInfo] = useState({});
-  const [lineRatingsData, setLineRatingsData] = useState([]);
+  const [chart, setChart] = useState<any>(null);
+  const [episode, setEpisode] = useState<Episode | null>(null);
+  const [chartType, setChartType] = useState<string>("line");
+  const [extraInfo, setExtraInfo] = useState<ExtraInfo | null>(null);
+  const [lineRatingsData, setLineRatingsData] = useState<Episode[]>([]);
 
   const barRatingsData = [...lineRatingsData]
     .sort((a, b) => parseFloat(b.imdbRating) - parseFloat(a.imdbRating))
     .slice(0, 20);
 
-  const { searchedShow, showData, setShowData } = props;
-
   useEffect(() => {
-    const retrieveExtraInfo = async (id) => {
+    const retrieveExtraInfo = async (id: string | undefined) => {
       let url = `https://www.omdbapi.com/?i=${id}&apikey=ed39c59`;
 
       try {
@@ -43,7 +54,7 @@ export default function Graph(props) {
         console.error(error);
       }
     };
-    retrieveExtraInfo(episode.id);
+    retrieveExtraInfo(episode?.id);
   }, [episode]);
 
   useEffect(() => {
@@ -60,7 +71,7 @@ export default function Graph(props) {
           },
         });
 
-        if (response.Error) {
+        if ("Error" in response) {
           setErrorInfo("No results found.");
           chart && chart.destroy();
         } else {
@@ -76,9 +87,9 @@ export default function Graph(props) {
   }, [searchedShow]);
 
   useEffect(() => {
-    const getRatingsData = async (showData) => {
+    const getRatingsData = async (showData: ShowData) => {
       let ratingsData = [];
-      for (let i = 1; i <= showData?.totalSeasons; i++) {
+      for (let i = 1; i <= Number(showData?.totalSeasons); i++) {
         const seasonData = await fetchSeasonData(showData.Title, i);
 
         for (let j = 0; j < seasonData["Episodes"].length; j++) {
@@ -98,7 +109,7 @@ export default function Graph(props) {
                 season: i,
                 episode: j,
               });
-            } catch (error) {
+            } catch (error: any) {
               console.log(error.message);
             }
           } else {
@@ -118,7 +129,7 @@ export default function Graph(props) {
       setIsLoading(false);
     };
 
-    const fetchSeasonData = async (title, season) => {
+    const fetchSeasonData = async (title: string, season: number) => {
       const response = await axios.get(OMDB_API_URL, {
         params: {
           apikey: OMDB_API_KEY,
@@ -129,7 +140,7 @@ export default function Graph(props) {
       return response.data;
     };
 
-    getRatingsData(showData);
+    getRatingsData(showData as ShowData);
   }, [showData]);
 
   useEffect(() => {
@@ -154,7 +165,7 @@ export default function Graph(props) {
         label: "Episode Rating",
         data: lineRatingsData.map((item) => parseFloat(item.imdbRating)),
         pointBackgroundColor: "white",
-        backgroundColor: (context) => {
+        backgroundColor: (context: any) => {
           const ctx = context.chart.ctx;
           const gradient = ctx.createLinearGradient(0, 0, 0, 500);
           gradient.addColorStop(0, "rgba(255, 0,0, 0.5)");
@@ -177,7 +188,7 @@ export default function Graph(props) {
       },
       tooltip: {
         callbacks: {
-          labelColor: function (context) {
+          labelColor: function () {
             return {
               borderColor: "#000",
               backgroundColor: "#000",
@@ -221,7 +232,7 @@ export default function Graph(props) {
         label: "Episode Rating",
         data: barRatingsData.map((item) => parseFloat(item.imdbRating)),
         pointBackgroundColor: "white",
-        backgroundColor: (context) => {
+        backgroundColor: (context: any) => {
           const ctx = context.chart.ctx;
           const gradient = ctx.createLinearGradient(1000, 0, 0, 0);
           gradient.addColorStop(0, "rgba(255, 0,0, 0.5)");
@@ -245,7 +256,7 @@ export default function Graph(props) {
       tooltip: {
         display: false,
         callbacks: {
-          labelColor: function (context) {
+          labelColor: function () {
             return {
               borderColor: "#000",
               backgroundColor: "#000",
@@ -277,14 +288,19 @@ export default function Graph(props) {
     },
   };
 
-  const renderChart = (chartType, chartData, chartOptions) => {
+  const renderChart = (
+    chartType: keyof ChartTypeRegistry,
+    chartData: any,
+    chartOptions: any
+  ) => {
     if (searchedShow.length > 0) {
-      const ctx = document.getElementById("myChart").getContext("2d");
+      const canvas = document.getElementById("myChart") as HTMLCanvasElement;
+      const ctx = canvas.getContext("2d");
 
       const hoverValue = {
         id: "hoverValue",
 
-        afterDatasetDraw(chart) {
+        afterDatasetDraw(chart: any) {
           const { data } = chart;
           let episodeData = data.datasets[0].moreData;
 
@@ -295,15 +311,16 @@ export default function Graph(props) {
           }
         },
       };
+      if (ctx) {
+        const newChart = new Chart(ctx, {
+          type: chartType as ChartType,
+          data: chartData,
+          options: chartOptions,
+          plugins: [hoverValue],
+        });
 
-      const newChart = new Chart(ctx, {
-        type: chartType,
-        data: chartData,
-        options: chartOptions,
-        plugins: [hoverValue],
-      });
-
-      setChart(newChart);
+        setChart(newChart);
+      }
     }
   };
 
@@ -329,27 +346,27 @@ export default function Graph(props) {
           <canvas className="graph__bar" id="myChart"></canvas>
           <div className="graph__info">
             <div className="graph__image-container">
-              <img className="graph__image" src={extraInfo.image} />
+              <img className="graph__image" src={extraInfo?.image} />
             </div>
             <br />
             <span>
-              {episode.title}{" "}
+              {episode?.title}{" "}
               {"(S" +
-                episode.season?.toString().padStart(2, "0") +
+                episode?.season?.toString().padStart(2, "0") +
                 "E" +
-                episode.episode?.toString().padStart(2, "0") +
+                episode?.episode?.toString().padStart(2, "0") +
                 ")"}
             </span>
             <br />
             <span>
-              {episode.imdbRating} <span className="graph__info-star">★</span>
+              {episode?.imdbRating} <span className="graph__info-star">★</span>
             </span>
             <br></br>
-            <span>{extraInfo.runtime}</span>
+            <span>{extraInfo?.runtime}</span>
             <br />
-            <span>Episode aired {extraInfo.released}</span>
+            <span>Episode aired {extraInfo?.released}</span>
             <br />
-            <span className="graph__info-plot">{extraInfo.plot}</span>
+            <span className="graph__info-plot">{extraInfo?.plot}</span>
             <br />
           </div>
         </div>
