@@ -43,3 +43,13 @@ export interface ExtraInfo {
   released: string;
   plot: string;
 }
+
+export enum ThemeOptions {
+  Dark = "dark",
+  Light = "light",
+}
+
+export enum TypeOfChart {
+  Line = "line",
+  Bar = "bar",
+}

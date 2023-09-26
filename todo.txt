@@ -1,0 +1,45 @@
+
+-clone previous version and add code over
+
+
+
+
+10 min ✓
+15 min
+15 min
+15 min
+15 min
+15 min
+5 min
+
+
+
+-bug fix! bar chart changes width (breaking bad) (only on first load?)
+-display message "graph not available/ please check spelling" it it doesn't render (Impaulsive)
+
+
+-breaking bad bar chart -> serarch seinfeld breaking bad image shows up shortly after load
+-fix search fargo (bar chart) => search DDD TV Sunday Night Classic Movie
+-clear query in many situation (including clicking on logo)
+-fix, when i click on header title, the link goes whole width of page
+-sort out all the new 'any's i added
+-fix errors in console
+-move text in seach button higher
+-tell the user to enter a tv show if he enters anything else
+-mark on graph where each seasons starts/ends
+-at certain screen size have message: app built for screen sizes over xxx px
+-customize both graph axisis 
+-fix: people just do nothing bar chart
+-top boy - find out why all the ratings arn't there
+-bug: hover in sugestions box not working properly
+-bug: on first load of page, enter key doesn't hide the suggestions box
+-disable searching when query.length == 0
+-use arrows on sugggestions?
+-move useref to app.js?
+-double check all data is correct
+-write better errors?
+-run accessibility test
+-change title
+-clean up options on both chart types?
+
+-final code refactor

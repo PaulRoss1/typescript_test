@@ -1,8 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import axios from "axios";
 import Chart, { ChartType, ChartTypeRegistry } from "chart.js/auto";
 import ReactSwitch from "react-switch";
-import { ShowData, ShowDataError, Episode, ExtraInfo } from "../api/interfaces";
+import {
+  ShowData,
+  ShowDataError,
+  Episode,
+  ExtraInfo,
+  TypeOfChart,
+} from "../api/interfaces";
+import LoadingAnimation from "./LoadingAnimation";
+import {
+  generateLineChartData,
+  generateLineChartOptions,
+} from "../graph_settings/lineChart";
+import {
+  generateBarChartData,
+  generateBarChartOptions,
+} from "../graph_settings/barChart";
 
 const OMDB_API_URL = "https://www.omdbapi.com/";
 const OMDB_API_KEY = "8ea4c4c5";
@@ -13,18 +28,23 @@ export interface GraphProps {
   setShowData: React.Dispatch<
     React.SetStateAction<ShowData | ShowDataError | null>
   >;
+  theme: string;
+  infoText: string;
+  setInfoText: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export default function Graph({
   searchedShow,
   showData,
   setShowData,
+  theme,
+  infoText,
+  setInfoText,
 }: GraphProps) {
-  const [errorInfo, setErrorInfo] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [chart, setChart] = useState<any>(null);
   const [episode, setEpisode] = useState<Episode | null>(null);
-  const [chartType, setChartType] = useState<string>("line");
+  const [chartType, setChartType] = useState<string>(TypeOfChart.Line);
   const [extraInfo, setExtraInfo] = useState<ExtraInfo | null>(null);
   const [lineRatingsData, setLineRatingsData] = useState<Episode[]>([]);
 
@@ -33,6 +53,7 @@ export default function Graph({
     .slice(0, 20);
 
   useEffect(() => {
+    setIsLoading(true);
     const retrieveExtraInfo = async (id: string | undefined) => {
       let url = `https://www.omdbapi.com/?i=${id}&apikey=ed39c59`;
 
@@ -55,13 +76,16 @@ export default function Graph({
       }
     };
     retrieveExtraInfo(episode?.id);
+    setIsLoading(false);
   }, [episode]);
 
   useEffect(() => {
     chart && chart.destroy();
     const handleSearch = async () => {
+      setInfoText("");
+
       setIsLoading(true);
-      setErrorInfo("");
+
       try {
         const response = await axios.get(OMDB_API_URL, {
           params: {
@@ -71,15 +95,16 @@ export default function Graph({
           },
         });
 
-        if ("Error" in response) {
-          setErrorInfo("No results found.");
+        if ("Error" in response.data) {
+          setInfoText("xxx");
+          setShowData(null);
           chart && chart.destroy();
+          setIsLoading(false);
         } else {
           setShowData(response.data);
           chart && chart.destroy();
         }
       } catch (error) {
-        setErrorInfo("An error occurred while fetching the data.");
         console.error(error);
       }
     };
@@ -104,10 +129,10 @@ export default function Graph({
               ratingsData.push({
                 title: seasonData.Episodes[j].Title,
                 released: seasonData.Episodes[j].Released,
-                imdbRating: avgRating,
+                imdbRating: Number(avgRating.toFixed(1)),
                 id: seasonData.Episodes[j].imdbID,
                 season: i,
-                episode: j,
+                episode: j + 1,
               });
             } catch (error: any) {
               console.log(error.message);
@@ -119,12 +144,13 @@ export default function Graph({
               imdbRating: rating,
               id: seasonData.Episodes[j].imdbID,
               season: i,
-              episode: j,
+              episode: j + 1,
             });
           }
         }
       }
 
+      console.log("ratingsData: " + JSON.stringify(ratingsData));
       setLineRatingsData(ratingsData);
       setIsLoading(false);
     };
@@ -145,148 +171,20 @@ export default function Graph({
 
   useEffect(() => {
     chart && chart.destroy();
-    if (chartType === "line") {
-      renderChart("line", lineChartData, lineChartOptions);
-    } else {
-      renderChart("bar", barChartData, barChartOptions);
+    if (chartType === TypeOfChart.Line && lineRatingsData.length > 0) {
+      const lineChartData = generateLineChartData(lineRatingsData, theme);
+      const lineChartOptions = generateLineChartOptions(theme);
+
+      renderChart(TypeOfChart.Line, lineChartData, lineChartOptions);
+    } else if (chartType === TypeOfChart.Bar && barRatingsData.length > 0) {
+      const barChartData = generateBarChartData(barRatingsData, theme);
+      const barChartOptions = generateBarChartOptions(theme);
+
+      renderChart(TypeOfChart.Bar, barChartData, barChartOptions);
 
       setEpisode(barRatingsData[0]);
     }
-  }, [lineRatingsData, chartType]);
-
-  const lineChartData = {
-    labels: lineRatingsData.map((item) => {
-      const formattedSeason = item.season.toString().padStart(2, "0");
-      const formattedEpisode = item.episode.toString().padStart(2, "0");
-      return `${item.title} (S${formattedSeason}E${formattedEpisode})`;
-    }),
-    datasets: [
-      {
-        label: "Episode Rating",
-        data: lineRatingsData.map((item) => parseFloat(item.imdbRating)),
-        pointBackgroundColor: "white",
-        backgroundColor: (context: any) => {
-          const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 500);
-          gradient.addColorStop(0, "rgba(255, 0,0, 0.5)");
-          gradient.addColorStop(0.5, "rgba(255, 0, 0, 0.25)");
-          gradient.addColorStop(1, "rgba(255, 0, 0, 0)");
-          return gradient;
-        },
-        borderColor: "rgba(255, 99, 132, 1)",
-        borderWidth: 1,
-        fill: true,
-        moreData: lineRatingsData,
-      },
-    ],
-  };
-
-  const lineChartOptions = {
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        callbacks: {
-          labelColor: function () {
-            return {
-              borderColor: "#000",
-              backgroundColor: "#000",
-              borderWidth: 0,
-            };
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          color: "rgba(200, 200, 200, 0.08)",
-          lineWidth: 1,
-        },
-        ticks: {
-          display: false,
-        },
-      },
-      y: {
-        grid: {
-          color: "rgba(200, 200, 200, 0.08)",
-          lineWidth: 1,
-        },
-        beginAtZero: true,
-      },
-    },
-    point: {
-      backgroundColor: "white",
-    },
-  };
-
-  const barChartData = {
-    labels: barRatingsData.map((item) => {
-      const formattedSeason = item.season.toString().padStart(2, "0");
-      const formattedEpisode = item.episode.toString().padStart(2, "0");
-      return `${item.title} (S${formattedSeason}E${formattedEpisode})`;
-    }),
-    datasets: [
-      {
-        label: "Episode Rating",
-        data: barRatingsData.map((item) => parseFloat(item.imdbRating)),
-        pointBackgroundColor: "white",
-        backgroundColor: (context: any) => {
-          const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(1000, 0, 0, 0);
-          gradient.addColorStop(0, "rgba(255, 0,0, 0.5)");
-          gradient.addColorStop(0.5, "rgba(255, 0, 0, 0.25)");
-          gradient.addColorStop(1, "rgba(255, 0, 0, 0)");
-          return gradient;
-        },
-        borderColor: "rgba(255, 99, 132, 1)",
-        borderWidth: 1,
-        moreData: barRatingsData,
-      },
-    ],
-  };
-
-  const barChartOptions = {
-    indexAxis: "y",
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        display: false,
-        callbacks: {
-          labelColor: function () {
-            return {
-              borderColor: "#000",
-              backgroundColor: "#000",
-              borderWidth: 0,
-            };
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          color: "rgba(200, 200, 200, 0.08)",
-          lineWidth: 1,
-        },
-      },
-      y: {
-        grid: {
-          color: "rgba(200, 200, 200, 0.08)",
-          lineWidth: 1,
-        },
-        ticks: {
-          display: false,
-        },
-      },
-    },
-    point: {
-      backgroundColor: "white",
-    },
-  };
+  }, [lineRatingsData, chartType, theme]);
 
   const renderChart = (
     chartType: keyof ChartTypeRegistry,
@@ -324,51 +222,79 @@ export default function Graph({
     }
   };
 
-  const toggleChart = () => {
-    setChartType((current) => (current === "line" ? "bar" : "line"));
-  };
-
   return (
     <div className="graph">
-      <span className="graph__error">{errorInfo}</span>
-
-      {isLoading && <div className="graph__loading">Loading..</div>}
-
-      {chart && (
-        <ReactSwitch
-          checked={true}
-          onChange={toggleChart}
-          className="graph__switch"
-        />
+      {isLoading && (
+        <div className="graph__loading">
+          <LoadingAnimation />
+        </div>
       )}
-      {chartType === "bar" ? (
+
+      {/* {!showData && (
+        <span className="graph__text">
+          Track how your favorite TV show's ratings have evolved and uncover its
+          best episodes by entering the name above.
+        </span>
+      )} */}
+
+      <span className="graph__text">{infoText}</span>
+
+      {chart && infoText.length === 0 && (
+        <div className="graph__button-container">
+          <button
+            className={
+              "graph__button-left" +
+              (chartType === TypeOfChart.Bar ? "" : " graph__button-active")
+            }
+            onClick={() => setChartType(TypeOfChart.Line)}
+          >
+            Chart
+          </button>
+          <button
+            className={
+              "graph__button-right" +
+              (chartType === TypeOfChart.Line ? "" : " graph__button-active")
+            }
+            onClick={() => setChartType(TypeOfChart.Bar)}
+          >
+            Top Episodes
+          </button>
+        </div>
+      )}
+      {chartType === TypeOfChart.Bar ? (
         <div className="graph__bar-container">
           <canvas className="graph__bar" id="myChart"></canvas>
-          <div className="graph__info">
-            <div className="graph__image-container">
-              <img className="graph__image" src={extraInfo?.image} />
+
+          {!isLoading && infoText.length === 0 && (
+            <div className="graph__info">
+              <div className="graph__image-container">
+                <img className="graph__image" src={extraInfo?.image} />
+              </div>
+              <br />
+              <span className="graph__info-title">
+                {episode?.title}{" "}
+                <span className="graph__info-year">
+                  {"(S" +
+                    episode?.season?.toString().padStart(2, "0") +
+                    "E" +
+                    episode?.episode?.toString().padStart(2, "0") +
+                    ")"}
+                </span>
+              </span>
+              <br />
+              <span>
+                {episode?.imdbRating}{" "}
+                <span className="graph__info-star">★</span>
+              </span>
+              <br></br>
+              <span>{extraInfo?.runtime}</span>
+              <br />
+              <span>Episode aired {extraInfo?.released}</span>
+              <br />
+              <span className="graph__info-plot">{extraInfo?.plot}</span>
+              <br />
             </div>
-            <br />
-            <span>
-              {episode?.title}{" "}
-              {"(S" +
-                episode?.season?.toString().padStart(2, "0") +
-                "E" +
-                episode?.episode?.toString().padStart(2, "0") +
-                ")"}
-            </span>
-            <br />
-            <span>
-              {episode?.imdbRating} <span className="graph__info-star">★</span>
-            </span>
-            <br></br>
-            <span>{extraInfo?.runtime}</span>
-            <br />
-            <span>Episode aired {extraInfo?.released}</span>
-            <br />
-            <span className="graph__info-plot">{extraInfo?.plot}</span>
-            <br />
-          </div>
+          )}
         </div>
       ) : (
         <canvas className="graph__line" id="myChart"></canvas>

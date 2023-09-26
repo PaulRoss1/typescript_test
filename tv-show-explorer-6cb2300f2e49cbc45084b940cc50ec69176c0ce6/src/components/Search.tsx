@@ -1,22 +1,34 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactSwitch from "react-switch";
 import axios from "axios";
+import { ShowData, ShowDataError, ThemeOptions } from "../api/interfaces";
 
 const OMDB_API_URL = "https://www.omdbapi.com/";
 const OMDB_API_KEY = "8ea4c4c5";
 
 export interface SearchProps {
-  setTheme: React.Dispatch<React.SetStateAction<string>>;
+  setTheme: React.Dispatch<React.SetStateAction<ThemeOptions>>;
   setSearchedShow: React.Dispatch<React.SetStateAction<string>>;
+  setInfoText: React.Dispatch<React.SetStateAction<string>>;
+  setShowData: React.Dispatch<
+    React.SetStateAction<ShowData | ShowDataError | null>
+  >;
 }
 
-export default function Search({ setTheme, setSearchedShow }: SearchProps) {
+export default function Search({
+  setTheme,
+  setSearchedShow,
+  setInfoText,
+  setShowData,
+}: SearchProps) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const suggestionsRef = useRef<HTMLInputElement | null>(null);
 
   const toggleTheme = () => {
-    setTheme((current) => (current === "light" ? "dark" : "light"));
+    setTheme((current) =>
+      current === ThemeOptions.Light ? ThemeOptions.Dark : ThemeOptions.Light
+    );
   };
 
   useEffect(() => {
@@ -76,14 +88,31 @@ export default function Search({ setTheme, setSearchedShow }: SearchProps) {
     };
   }, []);
 
+  const handleLogoClick = () => {
+    setSearchedShow("");
+    setShowData(null);
+    setInfoText(
+      "Track how your favorite TV show's ratings have evolved and uncover its best episodes by entering the name above."
+    );
+  };
+
   return (
     <div className="search">
+      <img
+        onClick={() => handleLogoClick()}
+        className="search__logo"
+        src="https://svgshare.com/getbyhash/sha1-3YuKJbuAYyH8Yn6dbSvIJcCiaxs="
+      />
+
+      <h1 onClick={() => handleLogoClick()} className="search__title">
+        Series Explorer
+      </h1>
+
       <ReactSwitch
         checked={true}
         onChange={toggleTheme}
         className="search__switch"
       />
-      <h1 className="search__title">Series Explorer</h1>
 
       <div className="search__container">
         <div className="search__input-container">
@@ -95,19 +124,21 @@ export default function Search({ setTheme, setSearchedShow }: SearchProps) {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyPress}
           />
-          <div className="search__suggestions-box" ref={suggestionsRef}>
-            <ul className="search__suggestions">
-              {suggestions.map((item, index) => (
-                <li
-                  key={index}
-                  onClick={() => handleSuggestionClick(item)}
-                  className="search__suggestion"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {suggestions.length > 0 && (
+            <div className="search__suggestions-box" ref={suggestionsRef}>
+              <ul className="search__suggestions">
+                {suggestions.map((item, index) => (
+                  <li
+                    key={index}
+                    onClick={() => handleSuggestionClick(item)}
+                    className="search__suggestion"
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div>
